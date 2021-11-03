@@ -30,7 +30,7 @@ const RecipeDetails: NextPage<IProps> = ({ recipe }) => {
       <div className="info">
          <p>Take about {cookingTime} minutes to cook.</p>
          <h3>Ingredients:</h3>
-         {ingredients.map(ing => (
+         {ingredients.map((ing: string) => (
             <span key={ing}>{ing}</span>
          ))}
       </div>
@@ -73,7 +73,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
       content_type: 'recipes'
    });
 
-   const paths = res.items.map(item => {
+   const paths = res.items.map((item: any) => {
       return {
          params: { slug: item.fields.slug }
       };
