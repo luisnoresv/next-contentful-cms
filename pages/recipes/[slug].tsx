@@ -14,7 +14,7 @@ interface IProps {
 }
 
 const RecipeDetails: NextPage<IProps> = ({ recipe }) => {
-   console.log('recipe', recipe);
+   // console.log('recipe', recipe);
    const { featuredImage, title, cookingTime, ingredients, method } = recipe.fields;
 
    return (<div>

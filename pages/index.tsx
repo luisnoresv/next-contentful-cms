@@ -7,7 +7,7 @@ interface IProps {
 };
 
 const Recipes: NextPage<IProps> = ({ recipes }) => {
-   console.log('list of recipes', recipes);
+   // console.log('list of recipes', recipes);
 
    return (
       <div className="recipe-list" >
