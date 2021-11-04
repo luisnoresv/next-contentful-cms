@@ -3,43 +3,41 @@ import Image from 'next/image';
 import { documentToReactComponents } from '@contentful/rich-text-react-renderer';
 
 import type { GetStaticPaths, GetStaticProps, NextPage } from 'next';
-
-const client = createClient({
-   space: process.env.CONTENTFUL_SPACE_ID || "",
-   accessToken: process.env.CONTENTFUL_ACCESS_KEY || ""
-});
+import ContentfulService from '@lib/api/contentfulService';
+import Skeleton from '@components/ui/Skeleton';
 
 interface IProps {
    recipe: Entry<any>;
 }
 
 const RecipeDetails: NextPage<IProps> = ({ recipe }) => {
-   // console.log('recipe', recipe);
+   if (!recipe) return <Skeleton />;
+
    const { featuredImage, title, cookingTime, ingredients, method } = recipe.fields;
+   return (
+      <div>
+         <div className="banner">
+            <Image
+               src={`https:${featuredImage.fields.file.url}`}
+               width={featuredImage.fields.file.details.image.width}
+               height={featuredImage.fields.file.details.image.height}
+               alt={title}
+            />
+            <h2>{title}</h2>
+         </div>
+         <div className="info">
+            <p>Take about {cookingTime} minutes to cook.</p>
+            <h3>Ingredients:</h3>
+            {ingredients.map((ing: string) => (
+               <span key={ing}>{ing}</span>
+            ))}
+         </div>
+         <div className="method">
+            <h3>Method:</h3>
+            <div>{documentToReactComponents(method)}</div>
+         </div>
 
-   return (<div>
-      <div className="banner">
-         <Image
-            src={`https:${featuredImage.fields.file.url}`}
-            width={featuredImage.fields.file.details.image.width}
-            height={featuredImage.fields.file.details.image.height}
-            alt={title}
-         />
-         <h2>{title}</h2>
-      </div>
-      <div className="info">
-         <p>Take about {cookingTime} minutes to cook.</p>
-         <h3>Ingredients:</h3>
-         {ingredients.map((ing: string) => (
-            <span key={ing}>{ing}</span>
-         ))}
-      </div>
-      <div className="method">
-         <h3>Method:</h3>
-         <div>{documentToReactComponents(method)}</div>
-      </div>
-
-      <style jsx>{`
+         <style jsx>{`
         h2,h3 {
           text-transform: uppercase;
         }
@@ -64,16 +62,15 @@ const RecipeDetails: NextPage<IProps> = ({ recipe }) => {
           content: ".";
         }
       `}</style>
-   </div>);
+      </div>);
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
+   const service = new ContentfulService();
 
-   const res = await client.getEntries({
-      content_type: 'recipes'
-   });
+   const recipes = await service.getRecipes();
 
-   const paths = res.items.map((item: any) => {
+   const paths = recipes.map((item: any) => {
       return {
          params: { slug: item.fields.slug }
       };
@@ -81,19 +78,26 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
    return {
       paths,
-      fallback: false
+      fallback: true
    };
 };
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-   const { items } = await client.getEntries({
-      content_type: 'recipes',
-      'fields.slug': params?.slug
-   });
+   const service = new ContentfulService();
+   const recipes = await service.getRecipesBySlug(params?.slug);
+
+   if (!recipes.length) {
+      return {
+         redirect: {
+            destination: '/',
+            permanent: false
+         }
+      };
+   }
 
    return {
       props: {
-         recipe: items[0],
+         recipe: recipes[0],
       },
       // revalidate: 3000
    };

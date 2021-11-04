@@ -1,6 +1,7 @@
 import type { NextPage, GetStaticProps, GetStaticPropsResult, GetStaticPropsContext } from 'next';
-import { createClient, Entry } from 'contentful';
-import RecipeCard from '../components/RecipeCard';
+import { Entry } from 'contentful';
+import RecipeCard from '@components/Recipes/RecipeCard';
+import ContentfulService from '@lib/api/contentfulService';
 
 interface IProps {
    recipes: Entry<any>[];
@@ -27,19 +28,13 @@ const Recipes: NextPage<IProps> = ({ recipes }) => {
 };
 
 export const getStaticProps: GetStaticProps = async () => {
+   const service = new ContentfulService();
 
-   const client = createClient({
-      space: process.env.CONTENTFUL_SPACE_ID || "",
-      accessToken: process.env.CONTENTFUL_ACCESS_KEY || ""
-   });
-
-   const res = await client.getEntries({
-      content_type: 'recipes'
-   });
+   const recipes = await service.getRecipes();
 
    return {
       props: {
-         recipes: res.items
+         recipes
       }
       // , revalidate: 3000
    };
